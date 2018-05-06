@@ -1,0 +1,207 @@
+
+
+#include <Keypad.h>
+#include <Servo.h>
+int buttonpressed=1;//sound for button pressed
+int openclose=2;
+int wrongpass=3;
+int pressedlen=0;
+int buzzer=10;//buzzer pin
+Servo servo_Motor; 
+int disable=0;
+String authenticatedkey="ABCD123456789";
+int authlen=authenticatedkey.length();
+String authveri;
+String aakey;
+int lenauth;
+
+String password = "ABC";//password 
+int passdstrength=password.length();//strength or characters in password
+int position = 0;
+const byte ROWS = 4; 
+const byte COLS = 4; 
+String pressed;
+String temp;
+char keys[ROWS][COLS] = {
+{'1','2','3','A'},
+{'4','5','6','B'},
+{'7','8','9','C'},
+{'*','0','#','D'}
+};
+
+byte rowPins[ROWS] = { 2, 3, 4, 5 };
+byte colPins[COLS] = { 6, 7, 8, 9 };
+Keypad keypad = Keypad( makeKeymap(keys), rowPins, colPins, ROWS, COLS );
+int redPin = 12;//red led
+int greenPin = 13;//blue led
+
+void setup()
+{
+  Serial.begin(9600);
+  
+  pinMode(buzzer,OUTPUT);
+  pinMode(redPin, OUTPUT);
+  pinMode(greenPin, OUTPUT);
+
+  servo_Motor.attach(11);
+
+  doropen(0);
+  
+}
+
+void loop()
+{
+  
+    
+  
+       char key = keypad.getKey();
+  if (key != NO_KEY)
+   {
+   buzzersound(buttonpressed);
+    
+    if (key == '*' )
+      {
+     doropen(0);
+      }
+      
+     else
+      { 
+      temp=(String)key;
+      pressed.concat(temp);
+      //Serial.println((String)pressed);
+      pressedlen=pressed.length();
+      if(chechlengthpasswd())
+      {
+      if(checkpassd())
+      {
+     // printonserial("correct");
+     // printonserial(pressed);
+     setstring();
+     doropen(1);
+      buzzersound(2);
+     // delay(20000);
+     // doropen(0);
+    //   buzzersound(2);
+     //printonserial(pressed);
+     }
+     else
+     {
+     printonserial(" not correct");
+     setstring();
+     doropen(0);
+      buzzersound(3);
+   
+     }
+     }
+     else if(pressedlen>passdstrength)
+     {
+     printonserial(" not correct");
+     doropen(0);
+      buzzersound(3);
+     }
+     }
+     }
+     delay(100);
+     }
+
+boolean chechlengthpasswd()
+{
+  if(passdstrength==pressedlen)
+  {
+    return true;
+  }
+  else
+  {
+    return false;
+    disable++;
+  }
+}
+
+
+
+
+
+void buzzersound(int choice)
+{
+  if(choice== buttonpressed)//for button press
+  {
+   digitalWrite(buzzer,HIGH);
+   delay(100);
+   digitalWrite(buzzer,LOW); 
+  }
+  else if(choice== 2)//password correct nd door open close
+  {
+    for(int i=0;i<5;i++)
+    {
+      digitalWrite(buzzer,HIGH);
+      delay(100);
+      digitalWrite(buzzer,LOW);
+       delay(60);
+      
+    }
+  }
+  else if(choice == 3)
+  {
+    for(int i=0;i<10;i++)
+    {
+      digitalWrite(buzzer,HIGH);
+      delay(200);
+      digitalWrite(buzzer,LOW);
+       delay(60);
+      
+    }
+  }
+  
+}
+void setstring()
+{
+   pressed.remove(0,pressedlen);
+}
+void printonserial(String message)
+{
+  Serial.println(message);
+}
+void printonserial(char message)
+{
+  Serial.println(message);
+}
+boolean checkpassd()
+{
+  if(pressed.equals(password))
+  {
+    return true;
+    disable=0;
+  }
+  else
+  {
+    return false;
+    disable++;
+  }
+  
+}
+void doropen(int pos)
+{
+  if(pos)
+  {
+    digitalWrite(redPin,LOW);
+    digitalWrite(greenPin,HIGH);
+    
+    for( int angle = 0; angle < 95; angle += 5)    // command to move from 0 degrees to 180 degrees 
+  {                                  
+    servo_Motor.write(angle);                 //command to rotate the servo to the specified angle
+                         
+  } 
+  }
+  else
+  {
+    digitalWrite(redPin,HIGH);
+    digitalWrite(greenPin,LOW);
+    for( int angle = 95; angle>=1; angle-=5)     // command to move from 180 degrees to 0 degrees 
+  {                                
+    servo_Motor.write(angle);              //command to rotate the servo to the specified angle
+                           
+  } 
+  }
+}
+
+
